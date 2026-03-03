@@ -22,16 +22,15 @@ type Host struct {
 	SessionToken string `toml:"session_token,omitempty"`
 }
 
-// Dir returns the configuration directory path.
 func Dir() (string, error) {
 	if d := os.Getenv("MB_CONFIG_DIR"); d != "" {
 		return d, nil
 	}
-	home, err := os.UserConfigDir()
+	home, err := os.UserHomeDir()
 	if err != nil {
-		return "", fmt.Errorf("determining config directory: %w", err)
+		return "", fmt.Errorf("determining home directory: %w", err)
 	}
-	return filepath.Join(home, "mb"), nil
+	return filepath.Join(home, ".config", "mb"), nil
 }
 
 // Path returns the full path to the config file.
