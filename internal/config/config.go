@@ -1,23 +1,25 @@
 package config
 
 import (
-	"encoding/json"
+	"bytes"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/BurntSushi/toml"
 )
 
 // Config holds the CLI configuration.
 type Config struct {
-	DefaultHost string          `json:"default_host,omitempty"`
-	Hosts       map[string]Host `json:"hosts,omitempty"`
+	DefaultHost string          `toml:"default_host,omitempty"`
+	Hosts       map[string]Host `toml:"hosts,omitempty"`
 }
 
 // Host holds per-instance configuration.
 type Host struct {
-	APIKey       string `json:"api_key,omitempty"`
-	SessionToken string `json:"session_token,omitempty"`
+	APIKey       string `toml:"api_key,omitempty"`
+	SessionToken string `toml:"session_token,omitempty"`
 }
 
 // Dir returns the configuration directory path.
@@ -38,7 +40,7 @@ func Path() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(dir, "config.json"), nil
+	return filepath.Join(dir, "config.toml"), nil
 }
 
 // Load reads the config from disk. Returns a zero Config if the file doesn't exist.
@@ -55,7 +57,7 @@ func Load() (*Config, error) {
 		return nil, fmt.Errorf("reading config: %w", err)
 	}
 	var cfg Config
-	if err := json.Unmarshal(data, &cfg); err != nil {
+	if err := toml.Unmarshal(data, &cfg); err != nil {
 		return nil, fmt.Errorf("parsing config: %w", err)
 	}
 	if cfg.Hosts == nil {
@@ -73,11 +75,12 @@ func (c *Config) Save() error {
 	if err := os.MkdirAll(filepath.Dir(p), 0o700); err != nil {
 		return fmt.Errorf("creating config directory: %w", err)
 	}
-	data, err := json.MarshalIndent(c, "", "  ")
-	if err != nil {
+	var buf bytes.Buffer
+	enc := toml.NewEncoder(&buf)
+	if err := enc.Encode(c); err != nil {
 		return fmt.Errorf("marshaling config: %w", err)
 	}
-	return os.WriteFile(p, data, 0o600)
+	return os.WriteFile(p, buf.Bytes(), 0o600)
 }
 
 // ActiveHost returns the host URL to use, respecting environment overrides.

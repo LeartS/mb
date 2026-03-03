@@ -79,15 +79,40 @@ Run `mb <command> --help` for details on any command.
 
 ## Configuration
 
-Config is stored in `~/.config/mb/config.json`. The following environment
-variables override the config file:
+Config is stored in `~/.config/mb/config.toml`. It is created automatically by
+`mb auth login`.
+
+```toml
+# Default Metabase instance to connect to.
+default_host = "https://metabase.example.com"
+
+# Per-host credentials. The key is the instance URL.
+# Each host has exactly one auth method: api_key or session_token.
+[hosts."https://metabase.example.com"]
+api_key = "mb_XXXXXXXXXXXX"
+
+[hosts."https://staging.metabase.example.com"]
+session_token = "38f4939c-ad7f-4cbe-ae54-30946daf8593"
+```
+
+### Config keys
+
+| Key | Type | Description |
+|---|---|---|
+| `default_host` | string | URL of the Metabase instance to use when `MB_HOST` is not set |
+| `hosts.<url>.api_key` | string | API key for the given host (recommended) |
+| `hosts.<url>.session_token` | string | Session token for the given host (expires after 14 days by default) |
+
+### Environment variables
+
+Environment variables take precedence over the config file:
 
 | Variable | Description |
 |---|---|
 | `MB_HOST` | Metabase instance URL |
 | `MB_API_KEY` | API key (takes precedence over session token) |
 | `MB_SESSION_TOKEN` | Session token |
-| `MB_CONFIG_DIR` | Override config directory |
+| `MB_CONFIG_DIR` | Override config directory (default: `~/.config/mb`) |
 
 ## Authentication
 
